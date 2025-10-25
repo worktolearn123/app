@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "CRM Machine Tracker",
+    "slug": "crm-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1f2937"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.crmtracker.app",
+      "config": {
+        "googleMapsApiKey": ""
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1f2937"
+      },
+      "package": "com.crmtracker.app",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "supabaseUrl": "https://sbukirujtqhwowsspakd.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNidWtpcnVqdHFod293c3NwYWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzODY0NDEsImV4cCI6MjA3Njk2MjQ0MX0.a0QcatfN6QZjIR37UB2IFYHZkZQNrtjGrKXUjqVnRcA"
+    }
+  }
+}
