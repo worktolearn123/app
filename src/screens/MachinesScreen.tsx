@@ -9,13 +9,11 @@ import {
   Modal,
   ScrollView,
   RefreshControl,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../services/supabase';
 import { MachineListItem } from '../components/MachineListItem';
-import { Machine, CHCCenter, MachineType } from '../types';
+import { Machine } from '../types';
 import { getTimeAgo } from '../utils/helpers';
 
 export const MachinesScreen = () => {
@@ -31,19 +29,6 @@ export const MachinesScreen = () => {
   } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
   const [detailsVisible, setDetailsVisible] = useState(false);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [chcCenters, setChcCenters] = useState<CHCCenter[]>([]);
-  const [newMachine, setNewMachine] = useState({
-    name: '',
-    type: 'Tractor' as MachineType,
-    status: 'idle' as 'in_use' | 'idle' | 'maintenance',
-    fuel_level: 100,
-    total_hours: 0,
-    location_lat: 30.3752,
-    location_lng: 76.7821,
-    chc_id: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchMachines = async () => {
     try {
@@ -67,91 +52,7 @@ export const MachinesScreen = () => {
 
   useEffect(() => {
     fetchMachines();
-    fetchCHCCenters();
   }, []);
-
-  const fetchCHCCenters = async () => {
-    try {
-      const { data, error } = await supabase.from('chc_centers').select('*');
-      if (error) throw error;
-      if (data) setChcCenters(data);
-    } catch (error) {
-      console.error('Error fetching CHC centers:', error);
-    }
-  };
-
-  const generateMachineId = async () => {
-    const { data, error } = await supabase
-      .from('machines')
-      .select('machine_id')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
-      return 'CRM-2024-0001';
-    }
-
-    const lastId = data[0].machine_id;
-    const match = lastId.match(/CRM-2024-(\d+)/);
-    if (match) {
-      const nextNum = parseInt(match[1]) + 1;
-      return `CRM-2024-${nextNum.toString().padStart(4, '0')}`;
-    }
-    return 'CRM-2024-0001';
-  };
-
-  const handleAddMachine = async () => {
-    if (!newMachine.name.trim()) {
-      Alert.alert('Error', 'Please enter a machine name');
-      return;
-    }
-
-    if (!newMachine.chc_id) {
-      Alert.alert('Error', 'Please select a CHC center');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const machineId = await generateMachineId();
-
-      const { error } = await supabase.from('machines').insert([
-        {
-          machine_id: machineId,
-          name: newMachine.name,
-          type: newMachine.type,
-          status: newMachine.status,
-          fuel_level: newMachine.fuel_level,
-          total_hours: newMachine.total_hours,
-          location_lat: newMachine.location_lat,
-          location_lng: newMachine.location_lng,
-          chc_id: newMachine.chc_id,
-        },
-      ]);
-
-      if (error) throw error;
-
-      Alert.alert('Success', 'Machine added successfully');
-      setAddModalVisible(false);
-      setNewMachine({
-        name: '',
-        type: 'Tractor',
-        status: 'idle',
-        fuel_level: 100,
-        total_hours: 0,
-        location_lat: 30.3752,
-        location_lng: 76.7821,
-        chc_id: '',
-      });
-      fetchMachines();
-    } catch (error) {
-      console.error('Error adding machine:', error);
-      Alert.alert('Error', 'Failed to add machine');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const filteredMachines = machines.filter((machine) => {
     const matchesSearch =
@@ -177,18 +78,10 @@ export const MachinesScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Machine Fleet</Text>
-          <Text style={styles.subtitle}>
-            {filteredMachines.length} machines available
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setAddModalVisible(true)}
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>Machine Fleet</Text>
+        <Text style={styles.subtitle}>
+          {filteredMachines.length} machines available
+        </Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -382,134 +275,6 @@ export const MachinesScreen = () => {
           </View>
         </View>
       </Modal>
-
-      <Modal
-        visible={addModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setAddModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Machine</Text>
-              <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                <Text style={styles.closeButton}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.detailsScroll}>
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Machine Name *</Text>
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="e.g., Harvester #8"
-                  value={newMachine.name}
-                  onChangeText={(text) =>
-                    setNewMachine({ ...newMachine, name: text })
-                  }
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Machine Type *</Text>
-                <View style={styles.pickerContainer}>
-                  {(['Tractor', 'Harvester', 'Baler', 'Seeder', 'Plough'] as MachineType[]).map((type) => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.typeOption,
-                        newMachine.type === type && styles.typeOptionActive,
-                      ]}
-                      onPress={() =>
-                        setNewMachine({ ...newMachine, type })
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.typeOptionText,
-                          newMachine.type === type && styles.typeOptionTextActive,
-                        ]}
-                      >
-                        {type}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>CHC Center *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {chcCenters.map((chc) => (
-                    <TouchableOpacity
-                      key={chc.id}
-                      style={[
-                        styles.chcOption,
-                        newMachine.chc_id === chc.id && styles.chcOptionActive,
-                      ]}
-                      onPress={() =>
-                        setNewMachine({ ...newMachine, chc_id: chc.id })
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.chcOptionText,
-                          newMachine.chc_id === chc.id && styles.chcOptionTextActive,
-                        ]}
-                      >
-                        {chc.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Initial Status</Text>
-                <View style={styles.statusContainer}>
-                  {(['idle', 'in_use', 'maintenance'] as const).map((status) => (
-                    <TouchableOpacity
-                      key={status}
-                      style={[
-                        styles.statusOption,
-                        newMachine.status === status && styles.statusOptionActive,
-                      ]}
-                      onPress={() =>
-                        setNewMachine({ ...newMachine, status })
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.statusOptionText,
-                          newMachine.status === status && styles.statusOptionTextActive,
-                        ]}
-                      >
-                        {status.replace('_', ' ').toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  isSubmitting && styles.submitButtonDisabled,
-                ]}
-                onPress={handleAddMachine}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Add Machine</Text>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -523,20 +288,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     padding: 20,
     paddingTop: 60,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  addButton: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   title: {
     fontSize: 24,
@@ -645,106 +396,6 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   statusText: {
-    fontWeight: '600',
-  },
-  formGroup: {
-    marginBottom: 24,
-  },
-  formLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  formInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#111827',
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
-  },
-  typeOption: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginHorizontal: 4,
-    marginBottom: 8,
-  },
-  typeOptionActive: {
-    backgroundColor: '#3b82f6',
-  },
-  typeOptionText: {
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  typeOptionTextActive: {
-    color: '#ffffff',
-  },
-  chcOption: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  chcOptionActive: {
-    backgroundColor: '#10b981',
-  },
-  chcOptionText: {
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  chcOptionTextActive: {
-    color: '#ffffff',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -4,
-  },
-  statusOption: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginHorizontal: 4,
-    marginBottom: 8,
-  },
-  statusOptionActive: {
-    backgroundColor: '#f59e0b',
-  },
-  statusOptionText: {
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  statusOptionTextActive: {
-    color: '#ffffff',
-  },
-  submitButton: {
-    backgroundColor: '#3b82f6',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
     fontWeight: '600',
   },
 });

@@ -6,21 +6,16 @@ import {
   StyleSheet,
   RefreshControl,
   Dimensions,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../services/supabase';
 import { CHCPerformance, MachineType } from '../types';
-import { exportMachinesToCSV } from '../utils/exportUtils';
 
 const { width } = Dimensions.get('window');
 
 export const AnalyticsScreen = () => {
   const { machines, stats } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [chcPerformance, setChcPerformance] = useState<CHCPerformance[]>([]);
   const [typeData, setTypeData] = useState<Record<MachineType, { inUse: number; idle: number }>>({
     Tractor: { inUse: 0, idle: 0 },
@@ -87,18 +82,6 @@ export const AnalyticsScreen = () => {
     calculateAnalytics();
   }, [machines]);
 
-  const handleExportCSV = async () => {
-    setIsExporting(true);
-    const result = await exportMachinesToCSV(machines);
-    setIsExporting(false);
-
-    if (result.success) {
-      Alert.alert('Success', 'Machine data exported successfully');
-    } else {
-      Alert.alert('Error', result.error || 'Failed to export data');
-    }
-  };
-
   const maxValue = Math.max(
     ...Object.values(typeData).map((d) => d.inUse + d.idle),
     1
@@ -112,21 +95,8 @@ export const AnalyticsScreen = () => {
       }
     >
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Analytics</Text>
-          <Text style={styles.subtitle}>Machine utilization insights</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={handleExportCSV}
-          disabled={isExporting}
-        >
-          {isExporting ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <Text style={styles.exportButtonText}>Export CSV</Text>
-          )}
-        </TouchableOpacity>
+        <Text style={styles.title}>Analytics</Text>
+        <Text style={styles.subtitle}>Machine utilization insights</Text>
       </View>
 
       <View style={styles.section}>
@@ -260,22 +230,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     padding: 20,
     paddingTop: 60,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  exportButton: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  exportButtonText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600',
   },
   title: {
     fontSize: 24,

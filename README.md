@@ -9,8 +9,6 @@ A real-time mobile application built with Expo (React Native) and TypeScript for
 - Color-coded status markers (Green: In Use, Amber: Idle, Red: Maintenance)
 - CHC (Custom Hiring Center) locations displayed
 - Interactive map with zoom and pan capabilities
-- **Find Nearest Idle Machine**: Uses device location to find and navigate to the closest available idle machine
-- Display user's current location on map
 
 ### Machine Fleet Management
 - Comprehensive list of all machines with search and filter
@@ -21,10 +19,6 @@ A real-time mobile application built with Expo (React Native) and TypeScript for
   - Total operational hours
   - Assigned CHC center
   - Last active timestamp
-- **Add New Machine**: Full form to register new machines with auto-generated IDs
-  - Select machine type (Tractor, Harvester, Baler, Seeder, Plough)
-  - Assign to CHC center
-  - Set initial status and fuel level
 
 ### Real-Time Monitoring & Alerts
 - Automatic alerts for:
@@ -32,15 +26,12 @@ A real-time mobile application built with Expo (React Native) and TypeScript for
   - Machines idle for more than 24 hours (Warning)
 - Real-time data synchronization via Supabase subscriptions
 - Clickable alerts to focus on specific machines
-- Mark alerts as read/unread
-- Filter alerts by status
 
 ### Data-Driven Analytics
 - Statistics dashboard showing total machines, in-use, idle, and maintenance counts
 - Interactive bar charts showing utilization by machine type
 - CHC Performance ranking table with utilization percentages
-- Overall fleet statistics with utilization rates
-- **Export to CSV**: Export complete machine data to CSV format for external analysis
+- Overall fleet statistics
 
 ## Tech Stack
 
@@ -50,7 +41,6 @@ A real-time mobile application built with Expo (React Native) and TypeScript for
 - **State Management**: Zustand
 - **Navigation**: React Navigation (Bottom Tabs)
 - **Maps**: React Native Maps
-- **Location Services**: Expo Location
 - **Date Handling**: date-fns
 
 ## Getting Started
